@@ -48,10 +48,10 @@
     <ClCompile Include="Skydome.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\aa-master\aa-master\ParticleManager.cpp">
+    <ClCompile Include="CubeObj3d.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="CubeObj3d.cpp">
+    <ClCompile Include="ParticleManager.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -86,25 +86,28 @@
     <ClInclude Include="Skydome.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\aa-master\aa-master\ParticleManager.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
     <ClInclude Include="CubeObj3d.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleManager.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\aa-master\aa-master\Resources\Shaders\Basic.hlsli" />
-    <None Include="..\..\aa-master\aa-master\Resources\Shaders\Particle.hlsli" />
-    <None Include="..\..\aa-master\aa-master\Resources\Shaders\SpriteShaderHeader.hlsli" />
+    <None Include="Resources\Shaders\Basic.hlsli" />
+    <None Include="Resources\Shaders\OBJShaderHeader.hlsli" />
+    <None Include="Resources\Shaders\Particle.hlsli" />
+    <None Include="Resources\Shaders\SpriteShaderHeader.hlsli" />
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\BasicPS.hlsl" />
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\BasicVS.hlsl" />
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\ParticleGS.hlsl" />
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\ParticlePS.hlsl" />
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\ParticleVS.hlsl" />
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\SpritePixelShader.hlsl" />
-    <FxCompile Include="..\..\aa-master\aa-master\Resources\Shaders\SpriteVertexShader.hlsl" />
+    <FxCompile Include="Resources\Shaders\BasicPS.hlsl" />
+    <FxCompile Include="Resources\Shaders\BasicVS.hlsl" />
+    <FxCompile Include="Resources\Shaders\OBJPixelShader.hlsl" />
+    <FxCompile Include="Resources\Shaders\OBJVertexShader.hlsl" />
+    <FxCompile Include="Resources\Shaders\ParticleGS.hlsl" />
+    <FxCompile Include="Resources\Shaders\ParticlePS.hlsl" />
+    <FxCompile Include="Resources\Shaders\ParticleVS.hlsl" />
+    <FxCompile Include="Resources\Shaders\SpritePixelShader.hlsl" />
+    <FxCompile Include="Resources\Shaders\SpriteVertexShader.hlsl" />
   </ItemGroup>
 </Project>

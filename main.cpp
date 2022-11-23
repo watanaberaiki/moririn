@@ -200,7 +200,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	////////////////////////////
 	//------音声読み込み--------//
 	///////////////////////////
-	
+
 	SoundData soundData1 = SoundLoadWave("Resources/Alarm01.wav");
 	SoundData soundData2 = SoundLoadWave("Resources/Alarm01.wav");
 
@@ -1053,7 +1053,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	XMFLOAT3 weaponScale = { 1.0f, 1.0f, 1.0f };
 
 	XMFLOAT3 EnemyRotation4 = { 0.0f, 0.0f,  0.0f };
-	XMFLOAT3 EnemyPosition4 = { -84.0f, 0.3f,  0.0f }; //-84~-66
+	XMFLOAT3 EnemyPosition4 = { 0.0f, 0.0f,  0.0f }; //-84~-66
 	XMFLOAT3 EnemyScale4 = { 1.0f, 1.0f, 1.0f };
 
 	XMFLOAT3 targetSideRotation = { 0.0f,0.0f,0.0f };
@@ -1073,7 +1073,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//弾
 	const float playerBulletSpeed = 3.0f;
 	XMFLOAT3 velocity = { 0,0,playerBulletSpeed };
-	int maxTimer = 500;
+	int maxTimer = 300;
 	int timer = 0;
 	int isBulletDead = 0;
 
@@ -1110,6 +1110,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	int isZoom = 0;
 	int slowmode = 0;
 	int slowCount = 0;
+	int finishTimer = 0;
 	//距離
 	float distance = -300;
 	//敵のライフ
@@ -1408,13 +1409,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			EnemyPosition2 = { 0.0f, 0.0f,  0.0f }; //-84~-66
 			EnemyScale2 = { 1.0f, 1.0f, 1.0f };
 
-			weaponRotation = { 0.0f, 0.0f,  0.0f };
-			weaponPosition = { 0.0f, 0.0f, 0.0f }; //-84~-66
-			weaponScale = { 1.0f, 1.0f, 5.0f };
-
-			//EnemyRotation4 = { 0.0f, 0.0f,  0.0f };
-			//EnemyPosition4 = { -84.0f, 0.3f,  0.0f }; //-84~-66
-			/*EnemyScale4 = { 1.0f, 1.0f, 1.0f };*/
+			EnemyRotation4 = { 0.0f, 0.0f,  0.0f };
+			EnemyPosition4 = { 0.0f, 0.0f,  0.0f }; //-84~-66
+			EnemyScale4 = { 5.0f, 7.0f, 5.0f };
 
 			targetSideRotation = { 0.0f,0.0f,0.0f };
 			targetSideTranslation = { 0.0f,0.0f,0.0f };
@@ -1434,6 +1431,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			splitNum = 100;
 			t = 0;
+
+			//チュートリアル
+			isTutorial = 0;
+			//スタートの演出用
+			isStart = 0;
+			//揺れる
+			isSway = 0;
+			swayCount = 0;
+			shook = 0;
+			oldeye = { 0,0,0 };
+			oldtarget = { 0,0,0 };
+			eyeUp = 1;
+			eyeDown = 0;
+			//敵を倒した演出
+			isDead = 0;
+			isZoom = 0;
+			slowmode = 0;
+			slowCount = 0;
+			finishTimer = 0;
+			//距離
+			distance = -300;
+			//敵のライフ
+			enemyLife = 15;
+
+
+			//カメラの回転角
+			angle = 0.0f;
+
 			if (input->TriggerKey(DIK_SPACE)) {
 				//スタートした(最初のカメラ用)
 				isTutorial = 1;
@@ -1444,25 +1469,24 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 		}
 
-		if (sceneNo_ == SceneNo::Tuto) {
-			TutoTimer++;
-			if (input->TriggerKey(DIK_SPACE) && TutoTimer >= 5) {
-				//スタートした(最初のカメラ用)
-				isTutorial = 1;
+		//if (sceneNo_ == SceneNo::Tuto) {
+		//	TutoTimer++;
+		//	if (input->TriggerKey(DIK_SPACE) && TutoTimer >= 5) {
+		//		//スタートした(最初のカメラ用)
+		//		isTutorial = 1;
 
-				sceneNo_ = SceneNo::Game;
+		//		sceneNo_ = SceneNo::Game;
 
 
 
-				////音声再生
-				//SoundPlayWave(xAudio2.Get(), soundData2);
-			}
-		}
+		//		////音声再生
+		//		//SoundPlayWave(xAudio2.Get(), soundData2);
+		//	}
+		//}
 
 
 		if (sceneNo_ == SceneNo::Game) {
 			if (isTutorial == 1) {
-
 				//回転
 				if (input->PushKey(DIK_A) || input->PushKey(DIK_D)) {
 					if (input->PushKey(DIK_D)) {
@@ -1491,14 +1515,43 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 
 				if (CheakCollision(PlayerBulletPosition, EnemyPosition2, PlayerBulletScale, EnemyScale2)) {
+					//パーティクル範囲
+					for (int i = 0; i < 20; i++) {
+						//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
+						const float rnd_pos = 0.1f;
+						XMFLOAT3 pos{};
+						pos.x += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+						pos.y += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+						pos.z += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+
+						//速度
+						//X,Y,Z全て[-0.05f,+0.05f]でランダムに分布
+						const float rnd_vel = 0.1f;
+						XMFLOAT3 vel{};
+						vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+						vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+						vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+						//重力に見立ててYのみ[-0.001f,0]でランダムに分布
+						const float rnd_acc = 0.01f;
+						XMFLOAT3 acc{};
+						acc.x = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+						acc.y = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+
+						//追加
+						particleManager->Add(60, pos, vel, acc);
+
+						particleManager->Update();
+					}
+
 					isBulletDead = 1;
 					bezierMode = FALSE;
-					PlayerBulletPosition.y = eye.y-5;
-					PlayerBulletPosition.x = (distance) * sinf(angle - XMConvertToRadians(1.0f));
-					PlayerBulletPosition.z = (distance) * cosf(angle - XMConvertToRadians(1.0f));
+					PlayerBulletPosition.y = eye.y - 5;
+					PlayerBulletPosition.x = (distance)*sinf(angle - XMConvertToRadians(1.0f));
+					PlayerBulletPosition.z = (distance)*cosf(angle - XMConvertToRadians(1.0f));
 					timer = 0;
 					velocity = { 0, 0, playerBulletSpeed };
 				}
+				particleManager->Update();
 
 				//弾
 				if (input->TriggerKey(DIK_SPACE)) {
@@ -1534,18 +1587,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					}
 				}
 				else if (bezierMode == FALSE) {
-					
-					PlayerBulletPosition.y = eye.y-5;
 
-					PlayerBulletPosition.x = (distance) * sinf(angle - XMConvertToRadians(1.0f));
-					PlayerBulletPosition.z = (distance) * cosf(angle - XMConvertToRadians(1.0f));
+					PlayerBulletPosition.y = eye.y - 5;
 
-					
+					PlayerBulletPosition.x = (distance)*sinf(angle - XMConvertToRadians(1.0f));
+					PlayerBulletPosition.z = (distance)*cosf(angle - XMConvertToRadians(1.0f));
+
+
 					PlayerBulletRotation.y = XMConvertToDegrees(angle);
 					velocity = { 0, 0, playerBulletSpeed };
 				}
 
-				
+
 
 				//ビュー変換行列を作り直す
 				matView = XMMatrixLookAtLH(XMLoadFloat3(&eye), XMLoadFloat3(&target), XMLoadFloat3(&up));
@@ -1554,9 +1607,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				if (input->TriggerKey(DIK_E)) {
 					//スタートの数値
 					EnemyPosition = { 0.0,150.0,0.0 };
+					EnemyPosition4 = { 0.0,70.0,0.0, };
 					isTutorial = 0;
 					isStart = 1;
-					eye = { 0, 0, -150 };
+					eye = { 0, 0, -180 };
 					target = { 0.0,0.0,0.0 };
 					angle = 0.0f;
 					bezierMode = FALSE;
@@ -1568,12 +1622,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 			}
 			else if (isTutorial == 0) {
-
+				particleManager->Update();
 				//始まった時
 				if (isStart == 1) {
 
 					if (EnemyPosition.y > 0) {
 						EnemyPosition.y -= 2;
+						EnemyPosition4.y -= 2;
 					}
 
 					if (isSway == 0 && EnemyPosition.y <= 0) {
@@ -1584,27 +1639,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 					if (isSway == 1) {
 						if (swayCount != 20) {
-
+							particleManager->Update();
 							//パーティクル範囲
 							for (int i = 0; i < 1; i++) {
 								//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
 								const float rnd_pos = 0.1f;
 								const float rnd_posX = 1.0f;
 								XMFLOAT3 pos{};
-								pos = EnemyPosition;
+								pos = EnemyPosition4;
+								pos.y += 70;
 								pos.x += (float)rand() / RAND_MAX * rnd_posX - rnd_posX / 2.0f;
 								pos.y += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
 								pos.z += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
 
 								//速度
 								//X,Y,Z全て[-0.05f,+0.05f]でランダムに分布
-								const float rnd_vel = 0.01f;
+								const float rnd_vel = 0.1f;
 								XMFLOAT3 vel{};
 								vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
 								vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
 								vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
 								//重力に見立ててYのみ[-0.001f,0]でランダムに分布
-								const float rnd_acc = 0.001f;
+								const float rnd_acc = 0.01f;
 								XMFLOAT3 acc{};
 								acc.y = (float)rand() / RAND_MAX * rnd_acc;
 
@@ -1665,7 +1721,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				//ゲーム中
 				else if (isStart == 0) {
-
+					particleManager->Update();
 					//敵が死んだときの演出
 					if (isDead == 1) {
 						constMapMaterial->color = { 0.8f,0.0f,0.01f,0.0f };
@@ -1704,9 +1760,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 								distance -= 10;
 							}
 							else {
-								isDead = 0;
-								slowCount = 0;
-								constMapMaterial->color = { 0.0f,0.0f,0.2f,0.0f };
+								if (finishTimer < 200) {
+									//パーティクル範囲
+									for (int i = 0; i < 20; i++) {
+										//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
+										const float rnd_pos = 0.1f;
+										XMFLOAT3 pos{};
+										pos.x += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+										pos.y += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+										pos.z += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+
+										//速度
+										//X,Y,Z全て[-0.05f,+0.05f]でランダムに分布
+										const float rnd_vel = 0.1f;
+										XMFLOAT3 vel{};
+										vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+										vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+										vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+										//重力に見立ててYのみ[-0.001f,0]でランダムに分布
+										const float rnd_acc = 0.001f;
+										XMFLOAT3 acc{};
+										acc.x = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+										acc.y = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+
+										//追加
+										particleManager->Add(60, pos, vel, acc);
+
+										particleManager->Update();
+									}
+								}
+								else if (finishTimer == 300) {
+									sceneNo_ = SceneNo::Clear;
+								}
+								finishTimer++;
 							}
 							eye.x = distance * sinf(angle);
 							eye.z = distance * cosf(angle);
@@ -1734,16 +1820,48 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						//カメラ上下
 						if (input->PushKey(DIK_W) || input->PushKey(DIK_S)) {
 							if (input->PushKey(DIK_W)) {
-								eye.y += 1.0f;
-								target.y += 1.0f;
+								if (eye.y < 150) {
+									eye.y += 1.0f;
+									target.y += 1.0f;
+								}
 							}
 							else if (input->PushKey(DIK_S)) {
-								eye.y -= 1.0f;
-								target.y -= 1.0f;
+								if (eye.y > -150) {
+									eye.y -= 1.0f;
+									target.y -= 1.0f;
+								}
 							}
 						}
 
 						if (CheakCollision(PlayerBulletPosition, EnemyPosition, PlayerBulletScale, EnemyScale)) {
+							//パーティクル範囲
+							for (int i = 0; i < 20; i++) {
+								//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
+								const float rnd_pos = 0.1f;
+								XMFLOAT3 pos{};
+								pos.x += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+								pos.y += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+								pos.z += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+
+								//速度
+								//X,Y,Z全て[-0.05f,+0.05f]でランダムに分布
+								const float rnd_vel = 0.1f;
+								XMFLOAT3 vel{};
+								vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+								vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+								vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+								//重力に見立ててYのみ[-0.001f,0]でランダムに分布
+								const float rnd_acc = 0.01f;
+								XMFLOAT3 acc{};
+								acc.x = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+								acc.y = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+
+								//追加
+								particleManager->Add(60, pos, vel, acc);
+
+								particleManager->Update();
+							}
+
 							enemyLife -= 1;
 							bezierMode = FALSE;
 							PlayerBulletPosition.y = eye.y - 5;
@@ -1752,6 +1870,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 							timer = 0;
 							velocity = { 0, 0, playerBulletSpeed };
 						}
+
+						if (CheakCollision(PlayerBulletPosition, EnemyPosition4, PlayerBulletScale, EnemyScale4)) {
+							//パーティクル範囲
+							for (int i = 0; i < 20; i++) {
+								//X,Y,Z全て[-5.0f,+5.0f]でランダムに分布
+								const float rnd_pos = 0.1f;
+								XMFLOAT3 pos{};
+								pos.x += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+								pos.y += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+								pos.z += (float)rand() / RAND_MAX * rnd_pos - rnd_pos / 2.0f;
+
+								//速度
+								//X,Y,Z全て[-0.05f,+0.05f]でランダムに分布
+								const float rnd_vel = 0.1f;
+								XMFLOAT3 vel{};
+								vel.x = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+								vel.y = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+								vel.z = (float)rand() / RAND_MAX * rnd_vel - rnd_vel / 2.0f;
+								//重力に見立ててYのみ[-0.001f,0]でランダムに分布
+								const float rnd_acc = 0.01f;
+								XMFLOAT3 acc{};
+								acc.x = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+								acc.y = (float)rand() / RAND_MAX * rnd_acc - rnd_acc / 2.0f;
+
+								//追加
+								particleManager->Add(60, pos, vel, acc);
+
+								particleManager->Update();
+							}
+
+							enemyLife -= 1;
+							bezierMode = FALSE;
+							PlayerBulletPosition.y = eye.y - 5;
+							PlayerBulletPosition.x = (distance)*sinf(angle - XMConvertToRadians(1.0f));
+							PlayerBulletPosition.z = (distance)*cosf(angle - XMConvertToRadians(1.0f));
+							timer = 0;
+							velocity = { 0, 0, playerBulletSpeed };
+						}
+						particleManager->Update();
 
 						//弾
 						if (input->TriggerKey(DIK_SPACE)) {
@@ -2308,7 +2465,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Title->Draw();
 
 			Sprite::PostDraw();
-			
+
 
 		}
 
@@ -2329,6 +2486,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				CubeObj3d::PreDraw(DXInit.commandList.Get());
 				cubeobject3d->Draw();
 				CubeObj3d::PostDraw();
+
+				// 3Dオブジェクト描画前処理
+				ParticleManager::PreDraw(DXInit.commandList.Get());
+
+				// 3Dオブクジェクトの描画
+				particleManager->Draw();
+
+				// 3Dオブジェクト描画後処理
+				ParticleManager::PostDraw();
 
 				////インデックスバッファビューの設定コマンド
 				//DXInit.commandList->IASetIndexBuffer(&ibView);
@@ -2360,10 +2526,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				sampleobject3d->Draw();
 				SampleObject3d::PostDraw();
 
-				//敵
-				Object3d::PreDraw(DXInit.commandList.Get());
-				object3d->Draw();
-				Object3d::PostDraw();
+				if (finishTimer <= 150) {
+					//敵
+					Object3d::PreDraw(DXInit.commandList.Get());
+					object3d->Draw();
+					Object3d::PostDraw();
+				}
+
 
 				////インデックスバッファビューの設定コマンド
 				//DXInit.commandList->IASetIndexBuffer(&ibView);
@@ -2376,6 +2545,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				////1番定数バッファビュー(CBV)の設定コマンド
 				//DXInit.commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform1->GetGPUVirtualAddress());
+
+				//// 描画コマンド
+				//DXInit.commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0);
+
+				////1番定数バッファビュー(CBV)の設定コマンド
+				//DXInit.commandList->SetGraphicsRootConstantBufferView(2, constBuffTransform4->GetGPUVirtualAddress());
 
 				//// 描画コマンド
 				//DXInit.commandList->DrawIndexedInstanced(_countof(indices), 1, 0, 0, 0);
